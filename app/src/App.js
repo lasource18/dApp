@@ -12,8 +12,8 @@ function App() {
   const [postsPerPage] = useState(10)
 
   const indexOfLastPost = currentPage * postsPerPage
-  const indexofFirstPost = indexOfLastPost - postsPerPage
-  const currentPosts = posts.slice(indexofFirstPost, indexOfLastPost)
+  const indexOfFirstPost = indexOfLastPost - postsPerPage
+  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost)
 
   const [walletConnected, setWalletConnected] = useState(false)
   const titleRef = useRef("")
@@ -21,12 +21,12 @@ function App() {
   const buttonRef = useRef("")
   const web3ModalRef = useRef()
 
-  const handleAddEntry = async () => {
+  const handleAddPost = async () => {
     try {
       const signer = await getProviderOrSigner(true)
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer)
       
-      const author = signer.getAddress()
+      const author = await signer.getAddress()
       const title = titleRef.current.value
       const text = postRef.current.value
       
@@ -36,15 +36,18 @@ function App() {
       console.log(title)
       console.log(text)
 
+      titleRef.current.value = ""
+      postRef.current.value = ""
+
       const tx = await nftContract.addPost(uuidv4(), author, title, text)
 
       await tx.wait()
 
       setPosts([...posts, { id: uuidv4(), author: author, title: title, text: text }])
-      titleRef.current.value = ""
-      postRef.current.value = ""
 
-      buttonRef.current.style.display = 'block'
+      // if(buttonRef.current.style.display === 'none')
+      //   buttonRef.current.style.display = 'block'
+
     } catch (e) {
       console.error(e)
     }
@@ -92,7 +95,7 @@ function App() {
       return(
         <div className="d-grid gap-2 col-6 mx-auto">
           <button ref={buttonRef} className="btn btn-primary mb-2" onClick={fetchPosts}>Get Posts</button>
-          <button className="btn btn-success" onClick={handleAddEntry}>Add New Entry</button>
+          <button className="btn btn-success" onClick={handleAddPost}>Add New Entry</button>
         </div>
       )
     }
@@ -121,6 +124,7 @@ function App() {
       
         if(buttonRef.current)
           buttonRef.current.style.display = 'none'
+      console.log(posts)
     } catch (e) {
       console.error(e)
     }
