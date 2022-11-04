@@ -36,11 +36,15 @@ function App() {
       console.log(title)
       console.log(text)
 
-      await nftContract.addPost(uuidv4(), author, title, text)
+      const tx = await nftContract.addPost(uuidv4(), author, title, text)
+
+      await tx.wait()
 
       setPosts([...posts, { id: uuidv4(), author: author, title: title, text: text }])
-      titleRef.current.value = null
-      postRef.current.value = null
+      titleRef.current.value = ""
+      postRef.current.value = ""
+
+      buttonRef.current.style.display = 'block'
     } catch (e) {
       console.error(e)
     }
@@ -86,7 +90,7 @@ function App() {
       )
     } else {
       return(
-        <div class="d-grid gap-2 col-6 mx-auto">
+        <div className="d-grid gap-2 col-6 mx-auto">
           <button ref={buttonRef} className="btn btn-primary mb-2" onClick={fetchPosts}>Get Posts</button>
           <button className="btn btn-success" onClick={handleAddEntry}>Add New Entry</button>
         </div>
@@ -98,7 +102,7 @@ function App() {
     setCurrentPage(selected + 1);
   }
 
-  const  fetchPosts = async () => {
+  const fetchPosts = async () => {
     try {
       const provider = await getProviderOrSigner()
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider)
@@ -106,7 +110,7 @@ function App() {
       const storedPosts = []
       const size = await nftContract.getSize()
 
-      for (let index = 0; index < size; index++) {
+      for (let index = 0; size.gt(index); index++) {
         const [id, author, title, text] = await nftContract.getPost(index)
         const post = { id, author, title, text }
         console.log(post)
@@ -114,8 +118,9 @@ function App() {
       }
       if(storedPosts)
         setPosts(storedPosts)
-
-        buttonRef.current.style.display = 'none'
+      
+        if(buttonRef.current)
+          buttonRef.current.style.display = 'none'
     } catch (e) {
       console.error(e)
     }
@@ -137,7 +142,7 @@ function App() {
       <h1>Web3Forum</h1>
       <div className="row">
         <div className="mb-3">
-        <label htmlFor="text">Title</label>
+          <label htmlFor="text">Title</label>
         <br></br>
           <input ref={titleRef} type="text"></input>
         </div>
